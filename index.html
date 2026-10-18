@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<title>Greyhound Form Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: tote-board header, meeting filter, then a single column of race cards in jump order, each showing its top three */
+:root{
+  --bg:#EDF0EE; --panel:#FFFFFF; --ink:#13201B; --muted:#5B6A64; --line:#D3DAD6;
+  --accent:#1D55C9; --accent-ink:#FFFFFF; --warn:#B76E00;
+  --board:#13201B; --board-ink:#F2F5F3;
+  --display:"Big Shoulders Display","Arial Narrow",Impact,sans-serif;
+  --body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0F1613; --panel:#17211D; --ink:#E6ECE9; --muted:#93A39C; --line:#2A3832;
+  --accent:#6E9BFF; --accent-ink:#0B1220; --warn:#E5A33A;
+  --board:#070B09; --board-ink:#E6ECE9; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0F1613; --panel:#17211D; --ink:#E6ECE9; --muted:#93A39C; --line:#2A3832;
+  --accent:#6E9BFF; --accent-ink:#0B1220; --warn:#E5A33A;
+  --board:#070B09; --board-ink:#E6ECE9; color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.5;padding-block:env(safe-area-inset-top,0px) env(safe-area-inset-bottom,0px)}
+[hidden]{display:none!important}
+.wrap{max-width:760px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+header.board{background:var(--board);color:var(--board-ink)}
+header .wrap{padding-block:18px 16px;display:flex;flex-direction:column;gap:4px}
+h1{font-family:var(--display);font-weight:800;font-size:clamp(2rem,7vw,2.8rem);letter-spacing:.02em;line-height:.95;margin:0;text-transform:uppercase}
+.sub{font-family:var(--mono);font-size:.8rem;opacity:.8}
+main .wrap{padding-block:16px 32px;display:flex;flex-direction:column;gap:12px}
+.chips{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;scrollbar-width:thin}
+.chip{font:inherit;font-size:.82rem;font-weight:600;white-space:nowrap;padding:6px 12px;border-radius:999px;border:1px solid var(--line);background:var(--panel);color:var(--ink);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.chip:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.race{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px;display:flex;flex-direction:column;gap:8px}
+.race.next{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent) inset}
+.rhead{display:flex;flex-wrap:wrap;gap:4px 12px;align-items:baseline}
+.rtime{font-family:var(--display);font-weight:800;font-size:1.35rem;font-variant-numeric:tabular-nums}
+.rname{font-weight:600}
+.rmeta{font-family:var(--mono);font-size:.78rem;color:var(--muted)}
+.nextTag{font-size:.68rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--accent)}
+.top3{display:flex;flex-direction:column;gap:6px}
+.pk{display:grid;grid-template-columns:2.2em auto minmax(0,1fr);gap:10px;align-items:center}
+.pos{font-family:var(--display);font-weight:800;font-size:1.05rem;color:var(--muted)}
+.pk:first-child .pos{color:var(--accent)}
+.dn{font-weight:600;overflow-wrap:anywhere}
+details.why>summary{cursor:pointer;font-size:.8rem;color:var(--accent);font-weight:600;list-style:none}
+details.why>summary::-webkit-details-marker{display:none}
+.reasons{display:flex;flex-direction:column;gap:6px;margin-top:6px;font-size:.84rem;color:var(--muted)}
+.reasons b{color:var(--ink);font-weight:600}
+.flag{color:var(--warn)}
+.rug{width:28px;height:28px;border-radius:5px;display:inline-grid;place-items:center;font-family:var(--display);font-weight:800;font-size:1rem;flex:none;border:1px solid rgba(0,0,0,.25)}
+.r1{background:#D62828;color:#fff}
+.r2{background:repeating-linear-gradient(180deg,#111 0 4px,#fff 4px 8px);color:#D62828;text-shadow:0 0 2px #fff,0 0 2px #fff}
+.r3{background:#fff;color:#111}
+.r4{background:#1F4FB8;color:#fff}
+.r5{background:#F4C400;color:#111}
+.r6{background:#1C7C3A;color:#fff}
+.r7{background:#111;color:#F4C400}
+.r8{background:#F28AB8;color:#111}
+.r0{background:var(--line);color:var(--ink)}
+.empty{background:var(--panel);border:1px dashed var(--line);border-radius:10px;padding:24px;text-align:center;color:var(--muted)}
+.empty h2{font-family:var(--display);font-size:1.4rem;text-transform:uppercase;color:var(--ink);margin:0 0 6px}
+details.past>summary{cursor:pointer;font-size:.85rem;font-weight:600;color:var(--muted);padding:6px 0}
+details.past[open]>summary{margin-bottom:8px}
+.pastlist{display:flex;flex-direction:column;gap:12px}
+footer .wrap{padding-block:0 28px;font-size:.78rem;color:var(--muted)}
+</style>
+</head>
+<body>
+<header class="board">
+  <div class="wrap">
+    <h1>Greyhound Form Lab</h1>
+    <div class="sub" id="sub">Loading today's races…</div>
+  </div>
+</header>
+
+<main>
+  <div class="wrap">
+    <div class="chips" id="dayChips" role="group" aria-label="Race day"></div>
+    <div class="chips" id="trackChips" role="group" aria-label="Meeting"></div>
+    <div id="list" style="display:flex;flex-direction:column;gap:12px"></div>
+  </div>
+</main>
+<footer><div class="wrap">Top 3 are picked on form, times, box, age, class and track record only, never the betting market. Fields are collected each morning from thedogs.com.au. A guide, not a guarantee. Gambling Help: 1800 858 858.</div></footer>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const TZ="Australia/Melbourne";
+function todayStr(){return new Intl.DateTimeFormat("en-CA",{timeZone:TZ}).format(new Date())}
+function nowHM(){return new Intl.DateTimeFormat("en-GB",{timeZone:TZ,hour:"2-digit",minute:"2-digit",hour12:false}).format(new Date())}
+
+/* ---------- model ---------- */
+const W={form:18,speed:17,early:14,trackdist:9,margins:8,box:8,cls:8,age:6,runhome:6,consistency:5,fresh:4,weight:3,strike:4};
+const BOX_BIAS={1:.10,2:.04,3:0,4:-.03,5:-.03,6:-.02,7:-.01,8:.05};
+function num(v){const n=parseFloat(v);return isFinite(n)?n:null}
+function monthsBetween(a,b){const d1=new Date(a),d2=new Date(b);if(isNaN(d1)||isNaN(d2))return null;return (d2-d1)/(1000*60*60*24*30.44)}
+function daysBetween(a,b){const d1=new Date(a),d2=new Date(b);if(isNaN(d1)||isNaN(d2))return null;return Math.round((d2-d1)/864e5)}
+function zs(vals,hb){const xs=vals.filter(v=>v!=null);if(xs.length<2)return vals.map(()=>0);
+  const m=xs.reduce((a,b)=>a+b,0)/xs.length,sd=Math.sqrt(xs.reduce((a,b)=>a+(b-m)**2,0)/xs.length)||1;
+  return vals.map(v=>v==null?-0.3:Math.max(-2.5,Math.min(2.5,(hb?v-m:m-v)/sd)))}
+const formV=rec=>{const w=[1,.8,.6,.45,.3,.2];let s=0,t=0;(rec||[]).slice(0,6).forEach((p,i)=>{p=num(p);if(p==null)return;s+=w[i]*(p>=1?(9-Math.min(p,8))/8:0);t+=w[i]});return t?s/t:null};
+const consistV=rec=>{const r=(rec||[]).slice(0,6).filter(p=>num(p)!=null);return r.length>=2?r.filter(p=>p>=1&&p<=3).length/r.length:null};
+const marginV=m=>{const r=(m||[]).slice(0,3).map(num).filter(v=>v!=null);return r.length?r.reduce((a,b)=>a+b,0)/r.length:null};
+// Peak racing age roughly 2 to 3.5 years; decline after 4
+const ageV=a=>{if(a==null)return null;if(a<20)return .45;if(a<24)return .75;if(a<=40)return 1;if(a<=46)return .8;if(a<=52)return .55;return .35};
+const freshV=d=>{if(d==null)return null;if(d<5)return .7;if(d<=21)return 1;if(d<=35)return .75;if(d<=60)return .45;return .25};
+const strikeV=r=>{const s=num(r.starts);if(!s)return null;return((num(r.wins)||0)+0.4*(num(r.places)||0)+0.5)/(s+3)};
+const tdV=r=>{const s=num(r.tdStarts);if(s==null)return null;return((num(r.tdWins)||0)+0.4*(num(r.tdPlaces)||0)+0.3)/(s+2)+Math.min(s,6)*0.01};
+const weightD=r=>{const a=num(r.weight),b=num(r.lastWeight);return a==null||b==null?null:Math.abs(a-b)};
+
+function rate(race){
+  const live=(race.runners||[]).filter(r=>!r.scratched).map(r=>({...r,
+    _age:r.whelped?monthsBetween(r.whelped,race.date):num(r.age),
+    _days:r.lastDate?daysBetween(r.lastDate,race.date):num(r.days)}));
+  const raw={form:live.map(r=>formV(r.recent)),speed:live.map(r=>num(r.best)),early:live.map(r=>num(r.split)),
+    runhome:live.map(r=>num(r.runhome)),margins:live.map(r=>marginV(r.margins)),consistency:live.map(r=>consistV(r.recent)),
+    trackdist:live.map(tdV),box:live.map(r=>BOX_BIAS[r.box]??0),cls:live.map(r=>num(r.cls)==null?null:-num(r.cls)),
+    age:live.map(r=>ageV(r._age)),fresh:live.map(r=>freshV(r._days)),weight:live.map(r=>{const d=weightD(r);return d==null?null:-d}),strike:live.map(strikeV)};
+  const low={speed:1,early:1,runhome:1,margins:1};
+  const z={};for(const k in raw)z[k]=zs(raw[k],!low[k]);
+  const active=Object.keys(W).filter(k=>raw[k].some(v=>v!=null));
+  const tw=active.reduce((a,k)=>a+W[k],0)||1;
+  return live.map((r,i)=>({r,score:active.reduce((a,k)=>a+z[k][i]*W[k]/tw,0),contrib:active.map(k=>({k,v:z[k][i]*W[k]/tw,z:z[k][i]}))}))
+    .sort((a,b)=>b.score-a.score);
+}
+function ageText(m){return m==null?"":`${Math.floor(m/12)}y ${Math.round(m%12)}m`}
+function reason(x){
+  const r=x.r,out=[],flags=[];
+  const say={form:()=>`good recent form (${(r.recent||[]).slice(0,4).join("-")})`,
+    speed:()=>`quick at this track and distance (${num(r.best)?.toFixed(2)})`,
+    early:()=>`fast early speed${num(r.split)?` (${num(r.split).toFixed(2)})`:""}`,
+    runhome:()=>"runs home strongly",margins:()=>"beaten narrowly lately",consistency:()=>"places consistently",
+    trackdist:()=>`proven here (${r.tdWins||0} wins from ${r.tdStarts||0})`,box:()=>`good draw in box ${r.box}`,
+    cls:()=>"drops in grade",age:()=>`prime age (${ageText(r._age)})`,fresh:()=>"well spaced between runs",
+    weight:()=>"weight steady",strike:()=>"high career strike rate"};
+  x.contrib.filter(c=>c.z>0.6).sort((a,b)=>b.v-a.v).slice(0,3).forEach(c=>out.push(say[c.k]()));
+  if(num(r.cls)>0)flags.push("up in grade");
+  if(r._days>35)flags.push(`${r._days} days since last run`);
+  if(r._age>48)flags.push(`older dog (${ageText(r._age)})`);
+  if(weightD(r)>1)flags.push(`weight swung ${weightD(r).toFixed(1)}kg last start`);
+  const s=out.length?out.join(", "):"best all-round numbers in an even field";
+  return esc(s.charAt(0).toUpperCase()+s.slice(1))+"."+(flags.length?` <span class="flag">Watch: ${esc(flags.join(", "))}.</span>`:"");
+}
+
+/* ---------- render ---------- */
+function esc(s){return String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
+function rug(b){const n=parseInt(b);return `<span class="rug r${n>=1&&n<=8?n:0}" aria-label="Box ${esc(b)}">${esc(b)}</span>`}
+const ORD=["1st","2nd","3rd"];
+let all=[],day=null,track="All";
+
+function raceCard(race,isNext){
+  const p=rate(race).slice(0,3);
+  return `<article class="race${isNext?" next":""}">
+    <div class="rhead"><span class="rtime">${esc(race.time||"")}</span><span class="rname">${esc(race.track)} R${esc(race.raceNo)}</span>
+      <span class="rmeta">${esc([race.distance,race.grade].filter(Boolean).join(" · "))}</span>${isNext?`<span class="nextTag">Next to jump</span>`:""}</div>
+    <div class="top3">${p.map((x,i)=>`<div class="pk"><span class="pos">${ORD[i]}</span>${rug(x.r.box)}<span class="dn">${esc(x.r.name)}</span></div>`).join("")||`<span class="rmeta">No runners listed.</span>`}</div>
+    ${p.length?`<details class="why"><summary>Why these three</summary><div class="reasons">${p.map((x,i)=>`<div><b>${ORD[i]} ${esc(x.r.name)}:</b> ${reason(x)}</div>`).join("")}</div></details>`:""}
+  </article>`;
+}
+
+function render(){
+  const days=[...new Set(all.map(r=>r.date))].sort().reverse().slice(0,4);
+  if(!day||!days.includes(day))day=days.includes(todayStr())?todayStr():days[0]||todayStr();
+  const fmt=d=>d===todayStr()?"Today":new Date(d+"T12:00:00").toLocaleDateString("en-AU",{weekday:"short",day:"numeric",month:"short"});
+  $("dayChips").innerHTML=days.length>1?days.map(d=>`<button class="chip" data-day="${esc(d)}" aria-pressed="${d===day}">${esc(fmt(d))}</button>`).join(""):"";
+  $("dayChips").hidden=days.length<2;
+  const races=all.filter(r=>r.date===day);
+  const tracks=[...new Set(races.map(r=>r.track))].sort();
+  if(track!=="All"&&!tracks.includes(track))track="All";
+  $("trackChips").innerHTML=races.length?["All",...tracks].map(t=>`<button class="chip" data-track="${esc(t)}" aria-pressed="${t===track}">${esc(t)}</button>`).join(""):"";
+  const shown=races.filter(r=>track==="All"||r.track===track).sort((a,b)=>(a.start||a.time||"").localeCompare(b.start||b.time||"")||a.raceNo-b.raceNo);
+  const updated=races.map(r=>r.updatedAt).filter(Boolean).sort().pop();
+  $("sub").textContent=races.length?`${tracks.length} meetings · ${races.length} races${updated?` · updated ${new Date(updated).toLocaleTimeString("en-AU",{timeZone:TZ,hour:"numeric",minute:"2-digit"})}`:""}`:"No races loaded yet";
+  if(!shown.length){
+    $("list").innerHTML=`<div class="empty"><h2>No races yet</h2>Today's fields are collected automatically every morning at about 7:45am and refreshed at lunchtime and late afternoon for scratchings.</div>`;return;
+  }
+  const isToday=day===todayStr(), now=Date.now();
+  const done=r=>r.start?new Date(r.start).getTime()<now-60000:false;
+  const upcoming=isToday?shown.filter(r=>!done(r)):shown, past=isToday?shown.filter(done):[];
+  $("list").innerHTML=upcoming.map((r,i)=>raceCard(r,isToday&&i===0)).join("")
+    +(past.length?`<details class="past"><summary>Already run (${past.length})</summary><div class="pastlist">${past.map(r=>raceCard(r,false)).join("")}</div></details>`:"")
+    +(!upcoming.length&&isToday?`<div class="empty">That's all the racing for today.</div>`:"");
+}
+document.addEventListener("click",e=>{
+  const d=e.target.closest("[data-day]"),t=e.target.closest("[data-track]");
+  if(d){day=d.dataset.day;track="All";render()}
+  if(t){track=t.dataset.track;render()}
+});
+setInterval(()=>{if(all.length)render()},60000);
+/* ---------- data ---------- */
+async function load(){
+  try{
+    const idx=await fetch("data/index.json?t="+Date.now()).then(r=>r.json());
+    const dates=(idx.dates||[]).slice(0,4);
+    const days=await Promise.all(dates.map(d=>fetch(`data/${d}.json?t=${Date.now()}`).then(r=>r.ok?r.json():null).catch(()=>null)));
+    all=days.filter(Boolean).flatMap(d=>d.races.map(r=>({...r,updatedAt:d.updatedAt})));
+    render();
+  }catch(e){$("sub").textContent="Couldn't load races. Refresh to try again.";}
+}
+load();
+setInterval(load,10*60*1000);
+})();
+</script>
+</body>
+</html>

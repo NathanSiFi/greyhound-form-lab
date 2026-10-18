@@ -1,0 +1,38 @@
+name: Collect races
+
+on:
+  schedule:
+    # GitHub runs these in UTC. During daylight saving (AEDT, UTC+11):
+    - cron: "45 20 * * *"   # 7:45am  — full day's fields
+    - cron: "30 1 * * *"    # 12:30pm — refresh for scratchings
+    - cron: "30 5 * * *"    # 4:30pm  — refresh before night meetings
+  workflow_dispatch: {}     # "Run workflow" button for a manual run
+
+permissions:
+  contents: write
+
+concurrency:
+  group: collect
+  cancel-in-progress: false
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Collect today's fields
+        run: node collector/collect.mjs
+
+      - name: Save data
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data
+          git diff --staged --quiet || git commit -m "Race data $(TZ=Australia/Melbourne date '+%Y-%m-%d %H:%M')"
+          git push

@@ -1,0 +1,13 @@
+{
+  "name": "greyhound-form-lab",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Daily top 3 for every Australian greyhound race, picked on form, times, box, age and class.",
+  "type": "module",
+  "scripts": {
+    "collect": "node collector/collect.mjs"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
